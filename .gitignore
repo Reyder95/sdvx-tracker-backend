@@ -1,0 +1,5 @@
+# dependencies
+/node_modules
+
+# connectionString file
+/queries/connectionString.json
