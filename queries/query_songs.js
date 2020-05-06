@@ -15,7 +15,7 @@ const getAllSongs = (req, res, next) => {
             {
                 next_page = true;
 
-                data = data.slice(0, 9)
+                data = data.slice(0, 10)
             } else {
                 data = data.slice(0, numElements);
             }
