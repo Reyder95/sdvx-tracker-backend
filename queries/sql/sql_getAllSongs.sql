@@ -18,4 +18,4 @@ INNER JOIN users u ON s.user_fk = u.id
 INNER JOIN (
 	SELECT * FROM charts c
 ) c ON c.song_fk = s.id
-GROUP BY s.id, u.id;
+GROUP BY s.id, u.id ORDER BY id DESC OFFSET ${offset} LIMIT 20;
