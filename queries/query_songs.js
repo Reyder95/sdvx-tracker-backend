@@ -20,7 +20,10 @@ const getAllSongs = (req, res, next) => {
 
     let page = parseInt(req.query.p)
     let offset = page * 10 - 10
-    let search = req.query.s;
+    let search = req.query.s
+    let level = req.query.l
+    let lowerLevel = 0;
+    let upperLevel = 21;
 
     if (search === undefined) {
         console.log(search);
@@ -32,13 +35,19 @@ const getAllSongs = (req, res, next) => {
        title: '%' + search + '%'
     });
 
+    if (level !== undefined)
+    {
+        lowerLevel = parseInt(level) - 1;
+        upperLevel = parseInt(level) + 1;
+    }
+
     var test = dbInfo.pgp.as.format('WHERE ${search}', {search: filter})
 
     console.log(test)
 
     console.log(sql_getAllSongs.toString);
 
-    dbInfo.db.any(sql_getAllSongs, {offset: offset, search: filter})
+    dbInfo.db.any(sql_getAllSongs, {offset: offset, search: filter, lower: lowerLevel, upper: upperLevel})
         .then((data) => {
             let next_page = false;
             let numElements = Object.keys(data).length;
