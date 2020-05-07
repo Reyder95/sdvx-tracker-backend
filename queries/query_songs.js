@@ -2,11 +2,43 @@ var dbInfo = require('./query_start.js');
 
 const sql_getAllSongs = dbInfo.sql('./sql/sql_getAllSongs.sql');
 
-const getAllSongs = (req, res, next) => {
+function FilterSet(filters) {
+    if (!filters || typeof filters !== 'object') {
+        throw new TypeError('Parameter \'filters\' must be an object.');
+    }
+    this._rawDBType = true;
+    this.formatDBType = function () {
+        var keys = Object.keys(filters);
+        var s = keys.map(function (k) {
+            return dbInfo.pgp.as.name(k) + ' ILIKE ${' + k + '}';
+        }).join(' OR ');
+        return dbInfo.pgp.as.format(s, filters);
+    };
+}
+
+const getAllSongs = (req, res, next) => {   
+
     let page = parseInt(req.query.p)
     let offset = page * 10 - 10
+    let search = req.query.s;
 
-    dbInfo.db.any(sql_getAllSongs, {offset: offset})
+    if (search === undefined) {
+        console.log(search);
+        search = '';
+    }
+
+    var filter = new FilterSet({
+       artist: '%' + search + '%',
+       title: '%' + search + '%'
+    });
+
+    var test = dbInfo.pgp.as.format('WHERE ${search}', {search: filter})
+
+    console.log(test)
+
+    console.log(sql_getAllSongs.toString);
+
+    dbInfo.db.any(sql_getAllSongs, {offset: offset, search: filter})
         .then((data) => {
             let next_page = false;
             let numElements = Object.keys(data).length;
