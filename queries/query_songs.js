@@ -28,6 +28,7 @@ const getAllSongs = (req, res, next) => {
     let upperLevel = 21;
 
     if (search === undefined) {
+        console.log(search);
         search = '';
     }
 
@@ -35,9 +36,7 @@ const getAllSongs = (req, res, next) => {
        artist: '%' + search + '%',
        title: '%' + search + '%'
     });
-
-
-
+  
     if (level !== undefined && level != 0)
     {
         lowerLevel = parseInt(level) - 1;
