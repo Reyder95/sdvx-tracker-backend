@@ -44,8 +44,6 @@ const getAllSongs = (req, res, next) => {
         upperLevel = parseInt(level) + 1;
     }
 
-    console.log(type);
-
     dbInfo.db.any(sql_getAllSongs, 
         {
             offset: offset, 
