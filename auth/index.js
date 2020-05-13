@@ -92,18 +92,18 @@ router.post('/login', (req, res, next) => {
             {
                 bcrypt.compare(req.body.password, user[0].password)
                     .then((result) => {
-
                         if (result)
                         {
                             const isSecure = req.app.get('env') != 'development'
                             res.cookie('user_id', user[0].id, {
                                 httpOnly: true,
-                                signed: isSecure,
-                                secure: true
+                                secure: isSecure,
+                                signed: true
                             })
                             res.status(200)
                                 .json({
-                                    result,
+                                    id: user[0].id,
+                                    username: user[0].username,
                                     message: "Logged In!"
                                 })
                         }

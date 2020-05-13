@@ -49,10 +49,15 @@ function insertUserIntoDatabase(username, email, password) {
     return dbInfo.db.none("INSERT INTO users (username, password, email, date_joined) VALUES ($1, $2, $3, $4)", [username, password, email, currentDate])
 }
 
+function getUserById(id) {
+    return dbInfo.db.one("SELECT username FROM users WHERE id = $1 LIMIT 1", id)
+}
+
 module.exports = {
     getAllUsers: getAllUsers,
     getUserByEmail: getUserByEmail,
     getUserByUsername: getUserByUsername,
     insertUserIntoDatabase: insertUserIntoDatabase,
-    getUserByUsernameOrEmail: getUserByUsernameOrEmail
+    getUserByUsernameOrEmail: getUserByUsernameOrEmail,
+    getUserById: getUserById
 }
