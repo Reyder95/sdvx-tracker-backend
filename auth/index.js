@@ -124,4 +124,15 @@ router.post('/login', (req, res, next) => {
     }
 })
 
+router.get('/logout', (req, res, next) => {
+    res.clearCookie('user_id');
+
+    res.json({
+        message: 'Successfully logged out!'
+    })
+    .catch((err) => {
+        next(new Error(err))
+    })
+})
+
 module.exports = router;
