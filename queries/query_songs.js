@@ -1,6 +1,7 @@
 var dbInfo = require('./query_start.js');
 
 const sql_getAllSongs = dbInfo.sql('./sql/sql_getAllSongs.sql');
+const sql_getBasicSongInformation = dbInfo.sql('./sql/sql_getBasicSongInfo.sql');
 
 function FilterSet(filters) {
     if (!filters || typeof filters !== 'object') {
@@ -14,6 +15,25 @@ function FilterSet(filters) {
         }).join(' OR ');
         return dbInfo.pgp.as.format(s, filters);
     };
+}
+
+const getBasicSongInformation = (req, res, next) => {
+    let songID = req.query.id;
+
+    dbInfo.db.any(sql_getBasicSongInformation, {
+        songID: songID
+    })
+    .then((data) => {
+        res.status(200)
+        .json({
+            status: 'Success!',
+            data: data,
+            message: 'Successfully retrieved songs with ID ' + songID
+        })
+    })
+    .catch(err => {
+        return next(err)
+    })
 }
 
 const getAllSongs = (req, res, next) => {   
@@ -81,5 +101,6 @@ const getAllSongs = (req, res, next) => {
 }
 
 module.exports = {
-    getAllSongs: getAllSongs
+    getAllSongs: getAllSongs,
+    getBasicSongInformation: getBasicSongInformation
 }
