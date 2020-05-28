@@ -1,0 +1,1 @@
+INSERT INTO songs (title, artist, type, verified, game, bpm, effector, custom_link, jacket, user_fk) VALUES (${title}, ${artist}, ${type}, ${verified}, ${game}, ${bpm}, ${effector}, ${custom_link}, ${jacket}, ${userID}) RETURNING songs.id;

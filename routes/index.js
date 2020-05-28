@@ -65,6 +65,8 @@ router.post('/api/add_score', [cors(withOptions), verifyToken], db_scores.addSco
 
 router.post('/api/delete_score', [cors(withOptions), verifyToken], db_scores.delScore);
 
+router.post('/api/add_song', db_songs.addSong);
+
 router.get('/api/song_single', db_songs.getBasicSongInformation);
 
 router.get('/api/user', db_users.getUserInfo);
