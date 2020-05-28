@@ -8,8 +8,7 @@ SELECT
 	s.bpm,
 	s.effector,
 	s.custom_link,
-	s.jacket_fp,
-	s.jacket_link,
+	s.jacket,
 	u.username,
 	json_agg(c) AS dfficulties
 FROM 
