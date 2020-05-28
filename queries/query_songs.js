@@ -36,20 +36,58 @@ const getBasicSongInformation = (req, res, next) => {
     })
 }
 
+const addSong = (req, res, next) => {
+    let title = req.body.title;
+    let artist = req.body.artist;
+    let type = req.body.type;
+    let verified = false;
+    let game = null;
+    let bpm = null;
+    let effector = null;
+    let custom_link = null;
+    let jacket = null;
+    let user_fk = null;
+
+    if (req.body.game != null)
+        game = req.body.game
+    
+    if (req.body.bpm != null)
+        bpm = req.body.bpm
+    
+    if (req.body.effector != null)
+        effector = req.body.effector
+
+    if (req.body.custom_link != null && req.body.type == 'custom')
+        custom_link = req.body.custom_link
+}
+
 const getAllSongs = (req, res, next) => {   
 
-    let page = parseInt(req.query.p)
+    let page = 1
     let offset = page * 10 - 10
-    let search = req.query.s
-    let level = req.query.l
-    let game = '%' + req.query.g + '%'
-    let type = '%' + req.query.t + '%'
+    let search = ''
+    let level = 0
+    let game = '%%'
+    let type = '%%'
     let lowerLevel = 0;
     let upperLevel = 21;
 
-    if (search === undefined) {
-        console.log(search);
-        search = '';
+    if (req.query.s != null)
+        search = req.query.s
+
+    if (req.query.l != null )
+        level = req.query.l
+
+    if (req.query.g != null)
+        game = "%" + req.query.g + "%"
+
+    if (req.query.t != null)
+        type = "%" + req.query.t + "%"
+
+    if (req.query.p != null)
+    {
+        page = req.query.p
+        offset = page * 10 - 10
     }
 
     var filter = new FilterSet({
@@ -57,7 +95,7 @@ const getAllSongs = (req, res, next) => {
        title: '%' + search + '%'
     });
   
-    if (level !== undefined && level != 0)
+    if (level != 0)
     {
         lowerLevel = parseInt(level) - 1;
         upperLevel = parseInt(level) + 1;
