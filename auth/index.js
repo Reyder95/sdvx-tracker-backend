@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 const userDB = require('../queries/query_users')
 
@@ -100,12 +101,15 @@ router.post('/login', (req, res, next) => {
                                 secure: isSecure,
                                 signed: true
                             })
-                            res.status(200)
+
+                            jwt.sign({user: result}, 'mysecretkey', (err, token) => {
+                                res.status(200)
                                 .json({
-                                    id: user[0].id,
-                                    username: user[0].username,
-                                    message: "Logged In!"
+                                    token
                                 })
+                            })
+
+                            
                         }
                         else {
                             next(new Error("Invalid Login"))
