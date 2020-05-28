@@ -76,7 +76,7 @@ const addScore = (req, res, next) => {
                     })
                 })
                 .catch(err => {
-                    console.log(err)
+                    res.sendStatus(404)
                 })
             }
             else
@@ -91,25 +91,37 @@ const addScore = (req, res, next) => {
 }
 
 const delScore = (req, res, next) => {
-    if (req.signedCookies.user_id)
-    {
-        dbInfo.db.none(sql_delScore, {
-            scoreID: req.body.id
-        })
-        .then((data) => {
-            res.status(200)
+
+    jwt.verify(req.token, 'mysecretkey', (err, authData) => {
+        if (err) {
+            res.status(403)
             .json({
-                status: "Success"
+                err
             })
-        })
-        .catch(err => {
-            next(err)
-        })
-    }
-    else
-    {
-        next(new Error("User is not logged in"))
-    }
+        } else {
+            
+            if (req.signedCookies.user_id)
+            {
+                dbInfo.db.none(sql_delScore, {
+                    scoreID: req.body.id
+                })
+                .then((data) => {
+                    res.status(200)
+                    .json({
+                        status: "Success",
+                        authData
+                    })
+                })
+                .catch(err => {
+                    next(err)
+                })
+            }
+            else
+            {
+                next(new Error("User is not logged in"))
+            }
+        }
+    })
 }
 
 const getScoresBySong = (req, res, next) => {
