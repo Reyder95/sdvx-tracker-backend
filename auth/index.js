@@ -102,10 +102,11 @@ router.post('/login', (req, res, next) => {
                                 signed: true
                             })
 
-                            jwt.sign({user: result}, 'mysecretkey', (err, token) => {
+                            jwt.sign({user: user}, 'mysecretkey', (err, token) => {
                                 res.status(200)
                                 .json({
-                                    token
+                                    token,
+                                    user
                                 })
                             })
 

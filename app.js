@@ -23,7 +23,10 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors({
   origin: 'http://localhost:8000',
-  credentials: true
+  credentials: true,
+  allowedHeaders: 'Content-Type,Authorization',
+  preflightContinue: true,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
 }))
 
 app.use('/auth', authRouter)

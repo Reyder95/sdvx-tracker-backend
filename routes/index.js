@@ -9,11 +9,13 @@ var db_scores = require('../queries/query_scores.js');
 
 var withOptions = {
   origin: 'http://localhost:8000',
-  credentials: true
+  credentials: true,
+  allowedHeaders: 'Content-Type,Authorization'
 }
 
 router.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Crontrol-Allow-Headers', 'Authorization')
   next();
 });
 
@@ -30,6 +32,8 @@ const verifyToken = (req, res, next) => {
     // Split at the space
     const bearer = bearerHeader.split(' ');
 
+    console.log('lol');
+
     // Get token from array
     const bearerToken = bearer[1];
 
@@ -40,6 +44,7 @@ const verifyToken = (req, res, next) => {
     next();
   } else {
     // Forbidden
+    console.log(req.headers)
     res.sendStatus(403)
   }
 }
@@ -55,6 +60,7 @@ router.get('/api/songs', db_songs.getAllSongs);
 
 router.get('/api/scores', db_scores.getScoresBySong);
 
+router.options('*', cors(withOptions));
 router.post('/api/add_score', [cors(withOptions), verifyToken], db_scores.addScore);
 
 router.post('/api/delete_score', [cors(withOptions), verifyToken], db_scores.delScore);
