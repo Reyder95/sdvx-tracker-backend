@@ -1,6 +1,9 @@
 var dbInfo = require('./query_start.js');
 
 const sql_getAllUsers = dbInfo.sql('./sql/sql_getAllUsers.sql');
+const sql_getUser = dbInfo.sql('./sql/sql_getUser.sql');
+const sql_libraryCount = dbInfo.sql('./sql/sql_libraryCount.sql');
+const sql_scoreCount = dbInfo.sql('./sql/sql_scoreCount.sql');
         
 function getAllUsers(req, res, next) {
     dbInfo.db.any(sql_getAllUsers)
@@ -15,6 +18,36 @@ function getAllUsers(req, res, next) {
         .catch (function (err) {
             return next(err);
         });
+}
+
+const getUserInfo = (req, res, next) => {
+    dbInfo.db.one(sql_getUser, {
+        userID: req.query.id
+    })
+    .then(userData => {
+        dbInfo.db.one(sql_scoreCount, {
+            userID: req.query.id
+        })
+        .then(scoreData => {
+            dbInfo.db.one(sql_libraryCount, {
+                userID: req.query.id
+            })
+            .then(libraryData => {
+                res.status(200)
+                .json({
+                    userData,
+                    scoreData,
+                    libraryData
+                })
+            })
+        })
+        .catch(err => {
+            next(err)
+        })
+    })
+    .catch(err => {
+        next(err)
+    })
 }
 
 function getUserByEmail(email) {
@@ -59,5 +92,6 @@ module.exports = {
     getUserByUsername: getUserByUsername,
     insertUserIntoDatabase: insertUserIntoDatabase,
     getUserByUsernameOrEmail: getUserByUsernameOrEmail,
-    getUserById: getUserById
+    getUserById: getUserById,
+    getUserInfo: getUserInfo
 }

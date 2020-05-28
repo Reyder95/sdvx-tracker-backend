@@ -17,6 +17,33 @@ router.use((req, res, next) => {
   next();
 });
 
+// Format of token
+// Authorization: Bearer <access_token>
+
+// Verify JWT Token
+const verifyToken = (req, res, next) => {
+  // Get authentication header value
+  const bearerHeader = req.headers['authorization'];
+  
+  // Check if bearer is undefined
+  if (typeof bearerHeader !== 'undefined') {
+    // Split at the space
+    const bearer = bearerHeader.split(' ');
+
+    // Get token from array
+    const bearerToken = bearer[1];
+
+    // Set the token
+    req.token = bearerToken;
+
+    // Next middleware
+    next();
+  } else {
+    // Forbidden
+    res.sendStatus(403)
+  }
+}
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
@@ -28,10 +55,12 @@ router.get('/api/songs', db_songs.getAllSongs);
 
 router.get('/api/scores', db_scores.getScoresBySong);
 
-router.post('/api/add_score', cors(withOptions), db_scores.addScore);
+router.post('/api/add_score', [cors(withOptions), verifyToken], db_scores.addScore);
 
 router.post('/api/delete_score', cors(withOptions), db_scores.delScore);
 
 router.get('/api/song_single', db_songs.getBasicSongInformation);
+
+router.get('/api/user', db_users.getUserInfo);
 
 module.exports = router;
