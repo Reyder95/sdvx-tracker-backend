@@ -46,7 +46,7 @@ function insertUserIntoDatabase(username, email, password) {
 
     let currentDate = year + '-' + month + '-' + day + " " + hours + ":" + minutes + ":" + seconds
 
-    return dbInfo.db.none("INSERT INTO users (username, password, email, date_joined) VALUES ($1, $2, $3, $4)", [username, password, email, currentDate])
+    return dbInfo.db.none("INSERT INTO users (username, password, email, date_joined, role_fk) VALUES ($1, $2, $3, $4, $5)", [username, password, email, currentDate, '1'])
 }
 
 function getUserById(id) {
