@@ -84,86 +84,99 @@ const getBasicSongInformation = (req, res, next) => {
 
 const addSong = (req, res, next) => {
 
-    jwt.verify(req.token, 'mysecretkey', (err, authData) => {
-        if (err) {
-            res.sendStatus(403);
-        } else {
-
-            let title = req.body.postObject.title;
-            let artist = req.body.postObject.artist;
-            let type = req.body.postObject.type;
-            let verified = false;
-            let game = null;
-            let bpm = null;
-            let effector = null;
-            let custom_link = null;
-            let jacket = null;
-            let userID = req.signedCookies.user_id;
-        
-            if (req.body.postObject.game != null)
-                game = req.body.postObject.game
+    if (req.signedCookies.user_id)
+    {
+        jwt.verify(req.token, 'mysecretkey', (err, authData) => {
+            if (err) {
+                res.sendStatus(403);
+            } else {
+                
+                let title = req.body.postObject.title;
+                let artist = req.body.postObject.artist;
+                let type = req.body.postObject.type;
+                let verified = false;
+                let game = null;
+                let bpm = null;
+                let effector = null;
+                let custom_link = null;
+                let jacket = null;
+                let userID = req.signedCookies.user_id;
             
-            if (req.body.postObject.bpm != null)
-                bpm = req.body.postObject.bpm
+                if (req.body.postObject.game != null)
+                    game = req.body.postObject.game
+                
+                if (req.body.postObject.bpm != null)
+                    bpm = req.body.postObject.bpm
+                
+                if (req.body.postObject.effector != null)
+                    effector = req.body.postObject.effector
             
-            if (req.body.postObject.effector != null)
-                effector = req.body.postObject.effector
-        
-            if (req.body.postObject.custom_link != null && req.body.type == 'custom')
-                custom_link = req.body.postObject.custom_link
-        
-            if (req.body.postObject.jacket != null)
-                jacket = req.body.postObject.jacket
-        
-            if (req.body.postObject.difficulties.length > 0)
-            {
-                dbInfo.db.tx(async t => {
-                    let songID = await dbInfo.db.one(sql_addSong, {
-                        title: title,
-                        artist: artist,
-                        type: type,
-                        verified: verified,
-                        game: game,
-                        bpm: bpm,
-                        effector: effector,
-                        custom_link: custom_link,
-                        jacket: jacket,
-                        userID: userID
-                        })
-                        .catch(err => {
+                if (req.body.postObject.custom_link != null && req.body.type == 'custom')
+                    custom_link = req.body.postObject.custom_link
+            
+                if (req.body.postObject.jacket != null)
+                    jacket = req.body.postObject.jacket
+            
+                if (req.body.postObject.difficulties.length > 0)
+                {
+                    dbInfo.db.tx(async t => {
+                        let songID = await dbInfo.db.one(sql_addSong, {
+                            title: title,
+                            artist: artist,
+                            type: type,
+                            verified: verified,
+                            game: game,
+                            bpm: bpm,
+                            effector: effector,
+                            custom_link: custom_link,
+                            jacket: jacket,
+                            userID: userID
+                            })
+                            .catch(err => {
+                                next(err)
+                            })
+            
+                            query = "INSERT INTO charts (difficulty, level, song_fk) VALUES (${difficulty}, ${level}, ${song_fk})";
+            
+                            if (req.body.postObject.difficulties < 1)
+                                return Promise.reject("No difficulties!")
+            
+                            let diffresult = req.body.postObject.difficulties.map(diff => dbInfo.db.none(query, {
+                                difficulty: diff.name,
+                                level: diff.level,
+                                song_fk: songID.id
+                            }))
+            
+                            await Promise.all(diffresult)
+                            return songID
+            
+            
+                        }).then(data => {
+                            res.status(200)
+                            .json({
+                                status: 'Success!',
+                                id: data.id,
+                                authData
+                            })
+                        }, err => {
                             next(err)
-                        })
-        
-                        query = "INSERT INTO charts (difficulty, level, song_fk) VALUES (${difficulty}, ${level}, ${song_fk})";
-        
-                        if (req.body.postObject.difficulties < 1)
-                            return Promise.reject("No difficulties!")
-        
-                        let diffresult = req.body.postObject.difficulties.map(diff => dbInfo.db.none(query, {
-                            difficulty: diff.name,
-                            level: diff.level,
-                            song_fk: songID.id
-                        }))
-        
-                        return Promise.all(diffresult)
-        
-        
-                    }).then(data => {
-                        res.status(200)
-                        .json({
-                            status: 'Success!',
-                            authData
-                        })
-                    }, err => {
-                        next(err)
-                    });
+                        });
+                }
+                else 
+                {
+                    next(new Error("Please provide at least one difficulty when inserting songs!"))
+                }
             }
-            else 
-            {
-                next(new Error("Please provide at least one difficulty when inserting songs!"))
-            }
-        }
-    })
+        })
+    }
+    else
+    {
+        res.status(403)
+        .json({
+            message: "You are not signed in!"
+        })
+    }
+    
 }
 
 const getAllSongs = (req, res, next) => {   
@@ -247,62 +260,93 @@ const getAllSongs = (req, res, next) => {
 }
 
 const updateSong = (req, res, next) => {
-    let songID = req.body.postObject.id;
 
-    let filters = {}
-    let filterObject = {}
+    if (req.signedCookies.user_id) {
+        jwt.verify(req.token, 'mysecretkey', (err, authData) => {
+
+            if (err) 
+                res.sendStatus(403);
+            else {
+                    let songID = req.body.postObject.id;
     
-    // Check which parameters are valid and assign them to variables
-    if (req.body.postObject.jacket != null) {
-        filterObject.jacket = req.body.postObject.jacket
-    }
+                    let filters = {}
+                    let filterObject = {}
+        
+                    // Check which parameters are valid and assign them to variables
+                    if (req.body.postObject.jacket != null) {
+                        filterObject.jacket = req.body.postObject.jacket
+                    }
+        
+                    if (req.body.postObject.title != null)
+                        filterObject.title = req.body.postObject.title
+        
+                    if (req.body.postObject.artist != null)
+                        filterObject.artist = req.body.postObject.artist
+        
+                    if (req.body.postObject.effector != null)
+                        filterObject.effector = req.body.postObject.effector
+        
+                    if (req.body.postObject.bpm != null)
+                        filterObject.bpm = req.body.postObject.bpm
+        
+                    if (req.body.postObject.game != null)
+                        filterObject.game = req.body.postObject.game
+        
+                    if (req.body.postObject.type != null)
+                        filterObject.type = req.body.postObject.type
+        
+                    if (req.body.postObject.custom_link != null)
+                        filterObject.custom_link = req.body.postObject.custom_link
+        
+                    if (!isEmpty(filterObject)) {
+                        filters = new UpdateFilterSet(filterObject)
+                        let test = dbInfo.pgp.as.format("SET $1", filters);
 
-    if (req.body.postObject.title != null)
-        filterObject.title = req.body.postObject.title
+                        dbInfo.db.one("SELECT * FROM songs WHERE id = ${songID}", { songID: songID })
+                        .then(songData => {
 
-    if (req.body.postObject.artist != null)
-        filterObject.artist = req.body.postObject.artist
+                            console.log(songData.user_fk)
+                            console.log(req.signedCookies.user_id)
 
-    if (req.body.postObject.effector != null)
-        filterObject.effector = req.body.postObject.effector
-
-    if (req.body.postObject.bpm != null)
-        filterObject.bpm = req.body.postObject.bpm
-
-    if (req.body.postObject.game != null)
-        filterObject.game = req.body.postObject.game
-
-    if (req.body.postObject.type != null)
-        filterObject.type = req.body.postObject.type
-
-    if (req.body.postObject.custom_link != null)
-        filterObject.custom_link = req.body.postObject.custom_link
-
-    if (!isEmpty(filterObject)) {
-        filters = new UpdateFilterSet(filterObject)
-        let test = dbInfo.pgp.as.format("SET $1", filters);
-        console.log(test)
-
-        dbInfo.db.tx(async t => {
-
-                await dbInfo.db.none("UPDATE songs SET ${search} WHERE id = ${songID}", { search: filters, songID: songID})
-
-            }).then(data => {
-                res.status(200)
-                .json({
-                    status: 'Success!'
-                })
-            }, err => {
-                next(err)
-            });
-    }
-    else
-    {
-        res.status(200)
-        .json({
-            message: "No filters specified"
+                            if (songData.user_fk != req.signedCookies.user_id)
+                                res.sendStatus(403)
+                            else {
+                                dbInfo.db.tx(async t => { 
+            
+                                    await dbInfo.db.none("UPDATE songs SET ${search} WHERE id = ${songID}", { search: filters, songID: songID})
+            
+                                }).then(data => {
+                                    res.status(200)
+                                    .json({
+                                        status: 'Success!'
+                                    })
+                                }, err => {
+                                    next(err)
+                                });
+                            }
+                            
+                        })
+        
+                        
+                    }
+                    else
+                    {
+                        res.status(500)
+                        .json({
+                            message: "No filters specified"
+                        })
+                    }
+                }
         })
     }
+    else {
+        res.status(403)
+        .json({
+            message: "You must be logged in!"
+        })
+    }
+
+    
 }
 
 module.exports = {
