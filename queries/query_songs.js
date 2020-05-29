@@ -285,8 +285,7 @@ const updateSong = (req, res, next) => {
 
         dbInfo.db.tx(async t => {
 
-                await dbInfo.db.none("UPDATE songs SET ${search}", { search: filters })
-
+                await dbInfo.db.none("UPDATE songs SET ${search} WHERE id = ${songID}", { search: filters, songID: songID})
 
             }).then(data => {
                 res.status(200)
