@@ -32,8 +32,6 @@ const verifyToken = (req, res, next) => {
     // Split at the space
     const bearer = bearerHeader.split(' ');
 
-    console.log('lol');
-
     // Get token from array
     const bearerToken = bearer[1];
 
@@ -65,7 +63,7 @@ router.post('/api/add_score', [cors(withOptions), verifyToken], db_scores.addSco
 
 router.post('/api/delete_score', [cors(withOptions), verifyToken], db_scores.delScore);
 
-router.post('/api/add_song', db_songs.addSong);
+router.post('/api/add_song', [cors(withOptions), verifyToken], db_songs.addSong);
 
 router.get('/api/song_single', db_songs.getBasicSongInformation);
 

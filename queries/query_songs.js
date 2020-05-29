@@ -1,4 +1,5 @@
 var dbInfo = require('./query_start.js');
+const jwt = require('jsonwebtoken')
 
 const sql_getAllSongs = dbInfo.sql('./sql/sql_getAllSongs.sql');
 const sql_getBasicSongInformation = dbInfo.sql('./sql/sql_getBasicSongInfo.sql');
@@ -38,81 +39,85 @@ const getBasicSongInformation = (req, res, next) => {
 }
 
 const addSong = (req, res, next) => {
-    let title = req.body.title;
-    let artist = req.body.artist;
-    let type = req.body.type;
-    let verified = false;
-    let game = null;
-    let bpm = null;
-    let effector = null;
-    let custom_link = null;
-    let jacket = null;
-    let userID = req.body.uid;
-    let novice = 0;
-    let advanced = 0;
-    let exhaust = 0;
-    let maximum = 0;
 
-    if (req.body.game != null)
-        game = req.body.game
-    
-    if (req.body.bpm != null)
-        bpm = req.body.bpm
-    
-    if (req.body.effector != null)
-        effector = req.body.effector
-
-    if (req.body.custom_link != null && req.body.type == 'custom')
-        custom_link = req.body.custom_link
-
-    if (req.body.jacket != null)
-        jacket = req.body.jacket
-
-    if (req.body.difficulties.length > 0)
-    {
-        dbInfo.db.tx(async t => {
-            let songID = await dbInfo.db.one(sql_addSong, {
-                title: title,
-                artist: artist,
-                type: type,
-                verified: verified,
-                game: game,
-                bpm: bpm,
-                effector: effector,
-                custom_link: custom_link,
-                jacket: jacket,
-                userID: userID
-                })
-
-                query = "INSERT INTO charts (difficulty, level, song_fk) VALUES (${difficulty}, ${level}, ${song_fk})";
-
-                if (req.body.difficulties < 1)
-                    return Promise.reject("No difficulties!")
-
-                let diffresult = req.body.difficulties.map(diff => dbInfo.db.none(query, {
-                    difficulty: diff.name,
-                    level: diff.level,
-                    song_fk: songID.id
-                }))
-
-                return Promise.all(diffresult)
-
-
-            }).then(data => {
-                res.status(200)
-                .json({
-                    status: 'Success!',
-                    data
-                })
-            }, err => {
-                next(err)
-            });
-    }
-    else 
-    {
-        next(new Error("Please provide at least one difficulty when inserting songs!"))
-    }
-    
+    jwt.verify(req.token, 'mysecretkey', (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            let title = req.body.title;
+            let artist = req.body.artist;
+            let type = req.body.type;
+            let verified = false;
+            let game = null;
+            let bpm = null;
+            let effector = null;
+            let custom_link = null;
+            let jacket = null;
+            let userID = req.body.uid;
+        
+            if (req.body.game != null)
+                game = req.body.game
+            
+            if (req.body.bpm != null)
+                bpm = req.body.bpm
+            
+            if (req.body.effector != null)
+                effector = req.body.effector
+        
+            if (req.body.custom_link != null && req.body.type == 'custom')
+                custom_link = req.body.custom_link
+        
+            if (req.body.jacket != null)
+                jacket = req.body.jacket
+        
+            if (req.body.difficulties.length > 0)
+            {
+                dbInfo.db.tx(async t => {
+                    let songID = await dbInfo.db.one(sql_addSong, {
+                        title: title,
+                        artist: artist,
+                        type: type,
+                        verified: verified,
+                        game: game,
+                        bpm: bpm,
+                        effector: effector,
+                        custom_link: custom_link,
+                        jacket: jacket,
+                        userID: userID
+                        })
+        
+                        query = "INSERT INTO charts (difficulty, level, song_fk) VALUES (${difficulty}, ${level}, ${song_fk})";
+        
+                        if (req.body.difficulties < 1)
+                            return Promise.reject("No difficulties!")
+        
+                        let diffresult = req.body.difficulties.map(diff => dbInfo.db.none(query, {
+                            difficulty: diff.name,
+                            level: diff.level,
+                            song_fk: songID.id
+                        }))
+        
+                        return Promise.all(diffresult)
+        
+        
+                    }).then(data => {
+                        res.status(200)
+                        .json({
+                            status: 'Success!',
+                            authData
+                        })
+                    }, err => {
+                        next(err)
+                    });
+            }
+            else 
+            {
+                next(new Error("Please provide at least one difficulty when inserting songs!"))
+            }
+        }
+        
+        
+    })
 }
 
 const getAllSongs = (req, res, next) => {   
