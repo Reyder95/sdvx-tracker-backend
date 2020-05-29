@@ -12,10 +12,25 @@ function FilterSet(filters) {
     this._rawDBType = true;
     this.formatDBType = function () {
         var keys = Object.keys(filters);
-        var s = keys.map(function (k) {
-            return dbInfo.pgp.as.name(k) + ' ILIKE ${' + k + '}';
-        }).join(' OR ');
-        return dbInfo.pgp.as.format(s, filters);
+        
+            var s = keys.map(function (k) {
+                if (k != 'game')
+                    return dbInfo.pgp.as.name(k) + ' ILIKE ${' + k + '}';
+                if (k == 'game') {
+                    if (filters.game == '%%%%')
+                        return '(' + dbInfo.pgp.as.name(k) + ' ILIKE ${' + k + '} OR game IS NULL)';
+                    else
+                        return '(' + dbInfo.pgp.as.name(k) + ' ILIKE ${' + k + '} AND game IS NOT NULL)';
+                }
+                    
+            })
+
+            s[0] = '(' + s[0].substring(0, s[0].length);
+            s[1] = s[1].substring(0, s[1].length) + ')';
+            let a = s.slice(0, -1).join(' OR ') + ' AND ' + s.slice(-1);
+            
+            return dbInfo.pgp.as.format(a, filters);
+        
     };
 }
 
@@ -44,33 +59,34 @@ const addSong = (req, res, next) => {
         if (err) {
             res.sendStatus(403);
         } else {
-            let title = req.body.title;
-            let artist = req.body.artist;
-            let type = req.body.type;
+
+            let title = req.body.postObject.title;
+            let artist = req.body.postObject.artist;
+            let type = req.body.postObject.type;
             let verified = false;
             let game = null;
             let bpm = null;
             let effector = null;
             let custom_link = null;
             let jacket = null;
-            let userID = req.body.uid;
+            let userID = req.signedCookies.user_id;
         
-            if (req.body.game != null)
-                game = req.body.game
+            if (req.body.postObject.game != null)
+                game = req.body.postObject.game
             
-            if (req.body.bpm != null)
-                bpm = req.body.bpm
+            if (req.body.postObject.bpm != null)
+                bpm = req.body.postObject.bpm
             
-            if (req.body.effector != null)
-                effector = req.body.effector
+            if (req.body.postObject.effector != null)
+                effector = req.body.postObject.effector
         
-            if (req.body.custom_link != null && req.body.type == 'custom')
-                custom_link = req.body.custom_link
+            if (req.body.postObject.custom_link != null && req.body.type == 'custom')
+                custom_link = req.body.postObject.custom_link
         
-            if (req.body.jacket != null)
-                jacket = req.body.jacket
+            if (req.body.postObject.jacket != null)
+                jacket = req.body.postObject.jacket
         
-            if (req.body.difficulties.length > 0)
+            if (req.body.postObject.difficulties.length > 0)
             {
                 dbInfo.db.tx(async t => {
                     let songID = await dbInfo.db.one(sql_addSong, {
@@ -85,13 +101,16 @@ const addSong = (req, res, next) => {
                         jacket: jacket,
                         userID: userID
                         })
+                        .catch(err => {
+                            next(err)
+                        })
         
                         query = "INSERT INTO charts (difficulty, level, song_fk) VALUES (${difficulty}, ${level}, ${song_fk})";
         
-                        if (req.body.difficulties < 1)
+                        if (req.body.postObject.difficulties < 1)
                             return Promise.reject("No difficulties!")
         
-                        let diffresult = req.body.difficulties.map(diff => dbInfo.db.none(query, {
+                        let diffresult = req.body.postObject.difficulties.map(diff => dbInfo.db.none(query, {
                             difficulty: diff.name,
                             level: diff.level,
                             song_fk: songID.id
@@ -151,8 +170,13 @@ const getAllSongs = (req, res, next) => {
 
     var filter = new FilterSet({
        artist: '%' + search + '%',
-       title: '%' + search + '%'
+       title: '%' + search + '%',
+       game: '%' + game + '%'
     });
+
+    let test = dbInfo.pgp.as.format("WHERE $1", filter);
+    console.log('hi')
+    console.log(test)
   
     if (level != 0)
     {
@@ -165,8 +189,7 @@ const getAllSongs = (req, res, next) => {
             offset: offset, 
             search: filter, 
             lower: lowerLevel, 
-            upper: upperLevel, 
-            game: game, 
+            upper: upperLevel,
             type: type
         })
         .then((data) => {

@@ -18,5 +18,5 @@ INNER JOIN charts c ON c.song_fk = s.id
 INNER JOIN (
     SELECT DISTINCT song_fk FROM charts WHERE charts.level > ${lower} AND charts.level < ${upper}
 ) levelCheck ON levelCheck.song_fk = s.id
-WHERE (${search}) AND game ILIKE ${game} AND type ILIKE ${type}
+WHERE (${search}) AND type ILIKE ${type}
 GROUP BY s.id, u.id ORDER BY id DESC OFFSET ${offset} LIMIT 20;
