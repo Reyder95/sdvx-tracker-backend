@@ -11,25 +11,54 @@ function FilterSet(filters) {
     }
     this._rawDBType = true;
     this.formatDBType = function () {
+        console.log('LOL')
         var keys = Object.keys(filters);
         
-            var s = keys.map(function (k) {
-                if (k != 'game')
-                    return dbInfo.pgp.as.name(k) + ' ILIKE ${' + k + '}';
-                if (k == 'game') {
-                    if (filters.game == '%%%%')
-                        return '(' + dbInfo.pgp.as.name(k) + ' ILIKE ${' + k + '} OR game IS NULL)';
-                    else
-                        return '(' + dbInfo.pgp.as.name(k) + ' ILIKE ${' + k + '} AND game IS NOT NULL)';
-                }
-                    
-            })
+        var s = keys.map(function (k) {
+            if (k != 'game')
+                return dbInfo.pgp.as.name(k) + ' ILIKE ${' + k + '}';
+            if (k == 'game') {  
+                if (filters.game == '%%%%')
+                    return '(' + dbInfo.pgp.as.name(k) + ' ILIKE ${' + k + '} OR game IS NULL)';
+                else
+                    return '(' + dbInfo.pgp.as.name(k) + ' ILIKE ${' + k + '} AND game IS NOT NULL)';
+            }
+                
+        })
 
-            s[0] = '(' + s[0].substring(0, s[0].length);
-            s[1] = s[1].substring(0, s[1].length) + ')';
-            let a = s.slice(0, -1).join(' OR ') + ' AND ' + s.slice(-1);
-            
-            return dbInfo.pgp.as.format(a, filters);
+        s[0] = '(' + s[0].substring(0, s[0].length);
+        s[1] = s[1].substring(0, s[1].length) + ')';
+        let a = s.slice(0, -1).join(' OR ') + ' AND ' + s.slice(-1);
+        
+        return dbInfo.pgp.as.format(a, filters);
+        
+    };
+}
+
+function isEmpty(obj) {
+    for (let key in obj) {
+        if (obj.hasOwnProperty(key))
+            return false
+    }
+
+    return true
+}
+
+function UpdateFilterSet(filters) {
+    if (!filters || typeof filters !== 'object') {
+        throw new TypeError('Parameter \'filters\' must be an object.')
+    }
+
+    this._rawDBType = true;
+
+    this.formatDBType = function () {
+        var keys = Object.keys(filters);
+        
+        var s = keys.map(function (k) {
+                return dbInfo.pgp.as.name(k) + ' = ${' + k + '}';
+        }).join(', ')
+        
+        return dbInfo.pgp.as.format(s, filters);
         
     };
 }
@@ -134,8 +163,6 @@ const addSong = (req, res, next) => {
                 next(new Error("Please provide at least one difficulty when inserting songs!"))
             }
         }
-        
-        
     })
 }
 
@@ -219,8 +246,69 @@ const getAllSongs = (req, res, next) => {
         });
 }
 
+const updateSong = (req, res, next) => {
+    let songID = req.body.postObject.id;
+
+    let filters = {}
+    let filterObject = {}
+    
+    // Check which parameters are valid and assign them to variables
+    if (req.body.postObject.jacket != null) {
+        filterObject.jacket = req.body.postObject.jacket
+    }
+
+    if (req.body.postObject.title != null)
+        filterObject.title = req.body.postObject.title
+
+    if (req.body.postObject.artist != null)
+        filterObject.artist = req.body.postObject.artist
+
+    if (req.body.postObject.effector != null)
+        filterObject.effector = req.body.postObject.effector
+
+    if (req.body.postObject.bpm != null)
+        filterObject.bpm = req.body.postObject.bpm
+
+    if (req.body.postObject.game != null)
+        filterObject.game = req.body.postObject.game
+
+    if (req.body.postObject.type != null)
+        filterObject.type = req.body.postObject.type
+
+    if (req.body.postObject.custom_link != null)
+        filterObject.custom_link = req.body.postObject.custom_link
+
+    if (!isEmpty(filterObject)) {
+        filters = new UpdateFilterSet(filterObject)
+        let test = dbInfo.pgp.as.format("SET $1", filters);
+        console.log(test)
+
+        dbInfo.db.tx(async t => {
+
+                await dbInfo.db.none("UPDATE songs SET ${search}", { search: filters })
+
+
+            }).then(data => {
+                res.status(200)
+                .json({
+                    status: 'Success!'
+                })
+            }, err => {
+                next(err)
+            });
+    }
+    else
+    {
+        res.status(200)
+        .json({
+            message: "No filters specified"
+        })
+    }
+}
+
 module.exports = {
     getAllSongs: getAllSongs,
     getBasicSongInformation: getBasicSongInformation,
-    addSong: addSong
+    addSong: addSong,
+    updateSong: updateSong
 }
