@@ -91,38 +91,52 @@ const addScore = (req, res, next) => {
 }
 
 const delScore = (req, res, next) => {
-
-    jwt.verify(req.token, 'mysecretkey', (err, authData) => {
-        if (err) {
-            res.status(403)
-            .json({
-                err
-            })
-        } else {
-            
-            if (req.signedCookies.user_id)
-            {
-                dbInfo.db.none(sql_delScore, {
-                    scoreID: req.body.id
+        jwt.verify(req.token, 'mysecretkey', (err, authData) => {
+            if (err) {
+                res.status(403)
+                .json({
+                    err
                 })
-                .then((data) => {
-                    res.status(200)
-                    .json({
-                        status: "Success",
-                        authData
+            } else {
+                if (req.signedCookies.user_id)
+                {
+                    dbInfo.db.one("SELECT sc.user_fk FROM scores sc WHERE sc.id = ${scoreID}", {
+                        scoreID: req.body.id
                     })
-                })
-                .catch(err => {
-                    next(err)
-                })
+                    .then(result => {
+                        if (result.user_fk == req.signedCookies.user_id) {
+                            dbInfo.db.none(sql_delScore, {
+                                scoreID: req.body.id
+                            })
+                            .then(() => {
+                                res.status(200)
+                                .json({
+                                    status: "Success",
+                                    authData
+                                })
+                            })
+                            .catch(err => {
+                                next(err)
+                            })
+                        }
+                        else {
+                            next(new Error('ACCESS DENIED'))
+                        }
+        
+                    })
+                    .catch(err => {
+                        next(new Error(err))
+                    })
+                }
+                    
+                    
+                else
+                {
+                    next(new Error("User is not logged in"))
+                }
             }
-            else
-            {
-                next(new Error("User is not logged in"))
-            }
-        }
-    })
-}
+        })
+    }
 
 const getScoresBySong = (req, res, next) => {
     let uid = req.query.uid;

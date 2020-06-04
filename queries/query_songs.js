@@ -215,8 +215,6 @@ const getAllSongs = (req, res, next) => {
     });
 
     let test = dbInfo.pgp.as.format("WHERE $1", filter);
-    console.log('hi')
-    console.log(test)
   
     if (level != 0)
     {
@@ -263,7 +261,6 @@ const updateSong = (req, res, next) => {
 
     if (req.signedCookies.user_id) {
         jwt.verify(req.token, 'mysecretkey', (err, authData) => {
-
             if (err) 
                 res.sendStatus(403);
             else {

@@ -1,7 +1,27 @@
 var express = require('express');
 var router = express.Router();
 var app = express();
+var path = require('path')
 var cors = require('cors')
+var multer = require('multer')
+var storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, './public/images')
+  },
+  filename: function (req, file, cb) {
+
+    cb(null, `uid-${req.params.uid + path.extname(file.originalname).toLowerCase()}`)
+  }
+})
+var upload = multer({
+  storage: storage,
+  fileFilter: (req, file, callback) => {
+    var ext = path.extname(file.originalname).toLowerCase()
+    if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg')
+      return callback(new Error('Only images are allowed!'))
+    callback(null, true)
+  }
+})
 
 var db_users = require('../queries/query_users.js');
 var db_songs = require('../queries/query_songs.js');
@@ -12,6 +32,8 @@ var withOptions = {
   credentials: true,
   allowedHeaders: 'Content-Type,Authorization'
 }
+
+
 
 router.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -66,8 +88,18 @@ router.post('/api/add_song', [cors(withOptions), verifyToken], db_songs.addSong)
 
 router.post('/api/update_song', [cors(withOptions), verifyToken], db_songs.updateSong);
 
+router.post('/api/profile_picture/:uid', [cors(withOptions), verifyToken, upload.single('profile')], db_users.uploadPictureToDB)
+
 router.get('/api/song_single', db_songs.getBasicSongInformation);
 
+router.post('/api/edit_profile', [cors(withOptions), verifyToken], db_users.editProfileInformation);
+
+router.get('/api/user_recent', db_users.getRecentScoresByUser);
+
+router.get('/api/user_library', db_users.getUserLibrary);
+
 router.get('/api/user', db_users.getUserInfo);
+
+router.get('/api/user_grades', db_users.getUserGrades);
 
 module.exports = router;
