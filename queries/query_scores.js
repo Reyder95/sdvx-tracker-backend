@@ -53,7 +53,7 @@ const addScore = (req, res, next) => {
                 else
                     grade = 'S'
         
-                dbInfo.db.none(sql_addScore, {
+                dbInfo.db.one(sql_addScore, {
                     score: req.body.score,
                     grade: grade,
                     date: currentDate,
@@ -61,7 +61,7 @@ const addScore = (req, res, next) => {
                     chartID: req.body.chart_id,
                     clearID: req.body.clear_id
                 })
-                .then(() => {
+                .then((score) => {
                     dbInfo.db.one("SELECT type FROM clear_types WHERE id = ${id}", {
                         id: req.body.clear_id
                     })
@@ -71,12 +71,12 @@ const addScore = (req, res, next) => {
                             score: req.body.score,
                             type: data.type,
                             grade: grade,
-                            authData
+                            score
                         })
                     })
                 })
                 .catch(err => {
-                    res.sendStatus(404)
+                    next(new Error(err))
                 })
             }
             else
@@ -146,7 +146,7 @@ const getScoresBySong = (req, res, next) => {
         userID: uid,
         songID: sid
     })
-    .then((data) => {
+    .then(data => {
         res.status(200)
         .json({
             status: "Success!",
