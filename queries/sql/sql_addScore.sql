@@ -1,1 +1,1 @@
-INSERT INTO scores (score, grade, date, user_fk, chart_fk, clear_fk) VALUES (${score}, ${grade}, ${date}, ${userID}, ${chartID}, ${clearID})
+INSERT INTO scores (score, grade, date, user_fk, chart_fk, clear_fk) VALUES (${score}, ${grade}, ${date}, ${userID}, ${chartID}, ${clearID}) RETURNING *
