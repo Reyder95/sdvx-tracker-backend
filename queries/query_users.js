@@ -55,8 +55,6 @@ function getAllUsers(req, res, next) {
 
 const getUserGrades = (req, res, next) => {
 
-    console.log(req.query.l)
-
     let levelLower = 0;
     let levelHigher = 21;
 
@@ -64,8 +62,6 @@ const getUserGrades = (req, res, next) => {
         levelLower = parseInt(req.query.l) - 1;
         levelHigher = parseInt(req.query.l) + 1;
     }
-
-    console.log(levelLower)
 
     dbInfo.db.any(sql_getUserGrades, {
         userID: req.query.id,
@@ -176,10 +172,9 @@ const getUserById = (id) => {
 }
 
 const uploadPictureToDB = (req, res, next) => {
-    console.log("File " +  `uid-${req.params.uid + path.extname(req.file.originalname).toLowerCase()}`)
     
     if (req.signedCookies.user_id && req.signedCookies.user_id == req.params.uid) {
-        jwt.verify(req.token, 'mysecretkey', (err, authData) => {
+        jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
             if (err)
                 res.sendStatus(403)
             else {
@@ -205,7 +200,7 @@ const uploadPictureToDB = (req, res, next) => {
 
 const editProfileInformation = (req, res, next) => {
     if (req.signedCookies.user_id) {
-        jwt.verify(req.token, 'mysecretkey', (err, authData) => {
+        jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
             if (err)
                 res.sendStatus(403)
             else {

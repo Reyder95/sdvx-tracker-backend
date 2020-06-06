@@ -7,7 +7,7 @@ const sql_delScore = dbInfo.sql('./sql/sql_delScore.sql')
 
 const addScore = (req, res, next) => {
 
-    jwt.verify(req.token, 'mysecretkey', (err, authData) => {
+    jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
         if (err) {
             res.sendStatus(403)
         } else {
@@ -91,7 +91,7 @@ const addScore = (req, res, next) => {
 }
 
 const delScore = (req, res, next) => {
-        jwt.verify(req.token, 'mysecretkey', (err, authData) => {
+        jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
             if (err) {
                 res.status(403)
                 .json({

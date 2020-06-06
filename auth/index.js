@@ -102,7 +102,7 @@ router.post('/login', (req, res, next) => {
                                 signed: true
                             })
 
-                            jwt.sign({user: user}, 'mysecretkey', (err, token) => {
+                            jwt.sign({user: user}, process.env.JWT_SECRET, (err, token) => {
                                 res.status(200)
                                 .json({
                                     token,

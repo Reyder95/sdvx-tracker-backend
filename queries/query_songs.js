@@ -86,7 +86,7 @@ const addSong = (req, res, next) => {
 
     if (req.signedCookies.user_id)
     {
-        jwt.verify(req.token, 'mysecretkey', (err, authData) => {
+        jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
             if (err) {
                 res.sendStatus(403);
             } else {
@@ -260,7 +260,7 @@ const getAllSongs = (req, res, next) => {
 const updateSong = (req, res, next) => {
 
     if (req.signedCookies.user_id) {
-        jwt.verify(req.token, 'mysecretkey', (err, authData) => {
+        jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
             if (err) 
                 res.sendStatus(403);
             else {
