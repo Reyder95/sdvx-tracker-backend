@@ -28,7 +28,7 @@ var db_songs = require('../queries/query_songs.js');
 var db_scores = require('../queries/query_scores.js');
 
 var withOptions = {
-  origin: 'http://localhost:8000',
+  origin: process.env.ORIGIN,
   credentials: true,
   allowedHeaders: 'Content-Type,Authorization'
 }
