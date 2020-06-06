@@ -127,7 +127,6 @@ const addSong = (req, res, next) => {
                             verified: verified,
                             game: game,
                             bpm: bpm,
-                            effector: effector,
                             custom_link: custom_link,
                             jacket: jacket,
                             userID: userID
@@ -261,8 +260,9 @@ const updateSong = (req, res, next) => {
 
     if (req.signedCookies.user_id) {
         jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
-            if (err) 
+            if (err) {
                 res.sendStatus(403);
+            }
             else {
                     let songID = req.body.postObject.id;
     
@@ -295,13 +295,12 @@ const updateSong = (req, res, next) => {
                     if (req.body.postObject.custom_link != null)
                         filterObject.custom_link = req.body.postObject.custom_link
         
-                    if (!isEmpty(filterObject)) {
+                        if (!isEmpty(filterObject)) {
                         filters = new UpdateFilterSet(filterObject)
                         let test = dbInfo.pgp.as.format("SET $1", filters);
 
                         dbInfo.db.one("SELECT * FROM songs WHERE id = ${songID}", { songID: songID })
                         .then(songData => {
-
                             console.log(songData.user_fk)
                             console.log(req.signedCookies.user_id)
 
