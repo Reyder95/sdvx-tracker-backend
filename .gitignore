@@ -6,3 +6,6 @@ connectionString.json
 
 #profile_pictures
 /public/images/
+
+#environment_variables
+.env
