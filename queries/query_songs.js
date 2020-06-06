@@ -88,6 +88,7 @@ const addSong = (req, res, next) => {
     {
         jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
             if (err) {
+                console.log('hi')
                 res.sendStatus(403);
             } else {
                 
@@ -97,7 +98,6 @@ const addSong = (req, res, next) => {
                 let verified = false;
                 let game = null;
                 let bpm = null;
-                let effector = null;
                 let custom_link = null;
                 let jacket = null;
                 let userID = req.signedCookies.user_id;
@@ -107,9 +107,6 @@ const addSong = (req, res, next) => {
                 
                 if (req.body.postObject.bpm != null)
                     bpm = req.body.postObject.bpm
-                
-                if (req.body.postObject.effector != null)
-                    effector = req.body.postObject.effector
             
                 if (req.body.postObject.custom_link != null && req.body.type == 'custom')
                     custom_link = req.body.postObject.custom_link
@@ -135,16 +132,24 @@ const addSong = (req, res, next) => {
                                 next(err)
                             })
             
-                            query = "INSERT INTO charts (difficulty, level, song_fk) VALUES (${difficulty}, ${level}, ${song_fk})";
+                            query = "INSERT INTO charts (difficulty, level, effector, song_fk) VALUES (${difficulty}, ${level}, ${effector}, ${song_fk})";
             
                             if (req.body.postObject.difficulties < 1)
                                 return Promise.reject("No difficulties!")
             
-                            let diffresult = req.body.postObject.difficulties.map(diff => dbInfo.db.none(query, {
-                                difficulty: diff.name,
-                                level: diff.level,
-                                song_fk: songID.id
-                            }))
+                            let diffresult = req.body.postObject.difficulties.map(diff => {
+                                let effector = null
+
+                                if (diff.effector != null)
+                                    effector = diff.effector
+                                
+                                dbInfo.db.none(query, {
+                                    difficulty: diff.name,
+                                    level: diff.level,
+                                    effector: effector,
+                                    song_fk: songID.id
+                                })
+                            })
             
                             await Promise.all(diffresult)
                             return songID
