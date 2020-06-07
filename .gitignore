@@ -1,5 +1,11 @@
 # dependencies
-/node_modules
+/node_modules/
 
 # connectionString file
 connectionString.json
+
+#profile_pictures
+/public/images/
+
+#environment_variables
+.env

@@ -3,7 +3,7 @@ var router = express.Router();
 var cors = require('cors');
 
 var withOptions = {
-  origin: 'http://localhost:8000',
+  origin: process.env.ORIGIN,
   credentials: true
 }
 

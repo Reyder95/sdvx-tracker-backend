@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors({
-  origin: 'http://localhost:8000',
+  origin: process.env.ORIGIN,
   credentials: true,
   allowedHeaders: 'Content-Type,Authorization',
   preflightContinue: true,
