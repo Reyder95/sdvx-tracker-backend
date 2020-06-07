@@ -3,7 +3,7 @@ var router = express.Router();
 var cors = require('cors');
 
 var withOptions = {
-  origin: process.env.ORIGIN,
+  origin: process.env.ORIGIN.split(' '),
   credentials: true
 }
 

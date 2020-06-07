@@ -337,7 +337,6 @@ const updateSong = (req, res, next) => {
                                                     filterObject.effector = diff.effector
 
                                                 let filters = new UpdateFilterSet(filterObject)
-                                                console.log(`UPDATE charts ${dbInfo.pgp.as.format("SET $1", filters)} WHERE song_fk = ${songID} AND difficulty = '${diff.name}'`);
 
                                                 dbInfo.db.none('UPDATE charts SET ${filter} WHERE song_fk = ${songID} AND difficulty = ${difficulty}', {
                                                     level: diff.level,
