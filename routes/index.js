@@ -88,6 +88,8 @@ router.post('/api/add_song', [cors(withOptions), verifyToken], db_songs.addSong)
 
 router.post('/api/update_song', [cors(withOptions), verifyToken], db_songs.updateSong);
 
+router.post('/api/add_difficulty', [cors(withOptions), verifyToken], db_songs.addDifficulty);
+
 router.post('/api/profile_picture/:uid', [cors(withOptions), verifyToken, upload.single('profile')], db_users.uploadPictureToDB)
 
 router.get('/api/song_single', db_songs.getBasicSongInformation);

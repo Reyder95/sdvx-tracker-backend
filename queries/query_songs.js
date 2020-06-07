@@ -269,7 +269,8 @@ const updateSong = (req, res, next) => {
                 res.sendStatus(403);
             }
             else {
-                    let songID = req.body.postObject.id;
+
+                    let songID = req.body.postObject.id
     
                     let filters = {}
                     let filterObject = {}
@@ -300,42 +301,66 @@ const updateSong = (req, res, next) => {
                     if (req.body.postObject.custom_link != null)
                         filterObject.custom_link = req.body.postObject.custom_link
         
-                        if (!isEmpty(filterObject)) {
-                        filters = new UpdateFilterSet(filterObject)
-                        let test = dbInfo.pgp.as.format("SET $1", filters);
+                    if (!isEmpty(filterObject) || req.body.postObject.difficulties.length > 0) {
+                        let result = null
 
+                        if (!isEmpty(filterObject) || req.body.postObject.difficulties.length > 0) {
+                            filters = new UpdateFilterSet(filterObject)
+                        
                         dbInfo.db.one("SELECT * FROM songs WHERE id = ${songID}", { songID: songID })
-                        .then(songData => {
-                            console.log(songData.user_fk)
-                            console.log(req.signedCookies.user_id)
+                            .then(songData => {
+                                if (songData.user_fk != req.signedCookies.user_id)
+                                    res.sendStatus(403)
+                                else {
 
-                            if (songData.user_fk != req.signedCookies.user_id)
-                                res.sendStatus(403)
-                            else {
-                                dbInfo.db.tx(async t => { 
-            
-                                    await dbInfo.db.none("UPDATE songs SET ${search} WHERE id = ${songID}", { search: filters, songID: songID})
-            
-                                }).then(data => {
+                                    if (!isEmpty(filterObject)) {
+                                        dbInfo.db.tx(async t => { 
+                                    
+                                            await dbInfo.db.none("UPDATE songs SET ${search} WHERE id = ${songID}", { search: filters, songID: songID})
+                                        
+                                        })
+                                        .catch(err => {
+                                            next(err)
+                                        })
+                                    }
+
+                                    if (req.body.postObject.difficulties.length > 0) {
+                                        dbInfo.db.tx(async t => {
+                                            
+                                            await req.body.postObject.difficulties.map(diff => {
+                                                let filterObject = {}
+
+                                                if (!!diff.level)
+                                                    filterObject.level = diff.level
+
+                                                if (!!diff.effector)
+                                                    filterObject.effector = diff.effector
+
+                                                let filters = new UpdateFilterSet(filterObject)
+                                                console.log(`UPDATE charts ${dbInfo.pgp.as.format("SET $1", filters)} WHERE song_fk = ${songID} AND difficulty = '${diff.name}'`);
+
+                                                dbInfo.db.none('UPDATE charts SET ${filter} WHERE song_fk = ${songID} AND difficulty = ${difficulty}', {
+                                                    level: diff.level,
+                                                    difficulty: diff.name,
+                                                    songID: songID,
+                                                    filter: filters
+                                                })
+                                                .catch(err => {
+                                                    next(err)
+                                                })
+                                            })
+
+                                        })
+                                    }
+
                                     res.status(200)
                                     .json({
-                                        status: 'Success!'
+                                        message: "Success!"
                                     })
-                                }, err => {
-                                    next(err)
-                                });
-                            }
-                            
-                        })
-        
-                        
-                    }
-                    else
-                    {
-                        res.status(500)
-                        .json({
-                            message: "No filters specified"
-                        })
+                                }
+
+                            })
+                        }
                     }
                 }
         })
@@ -350,9 +375,129 @@ const updateSong = (req, res, next) => {
     
 }
 
+// Adds a difficulty if the difficulty exists
+const addDifficulty = (req, res, next) => {
+
+    // Check whether or not the user is logged in
+    if (req.signedCookies.user_id) {
+
+        // Uses JSON-Web-Token to authenticate user.
+        jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
+
+            // If they cannot be authenticated, send a 403 status (Forbidden)
+            if (err)
+                res.sendStatus(403)
+            else {
+
+                // Gets "id" from the body as the songID parameter
+                let songID = req.body.postObject.id
+
+                console.log(req.body)
+
+                // We check whether we should send an OK or an error
+                let isOK = true;
+
+                // We obtain the user_fk from the song to double check the user is the uploader of the song
+                dbInfo.db.one('SELECT user_fk FROM songs WHERE id = ${songID}', { songID: songID })
+                .then(data => {
+
+                    // Check the returned user_fk against the cookie ID sent. If they match, proceed. Otherwise send a 403 (Forbidden)
+                    if (data.user_fk == req.signedCookies.user_id) {
+
+                        console.log('1st test')
+
+                        // Check if a difficulty even exists.
+                        if (req.body.postObject.difficulties.length > 0) {
+
+                            console.log('2nd test')
+                    
+                            // Go through each difficulty
+                            req.body.postObject.difficulties.map(diff => {
+
+                                // Check if the difficulty is a valid difficulty
+                                if (diff.name == 'NOVICE' || diff.name == 'ADVANCED' || diff.name == 'EXHAUST' || diff.name == 'MAXIMUM') {
+
+                                    // Check if the difficulty already exists
+                                    dbInfo.db.one('SELECT * FROM charts WHERE song_fk = ${songID} AND difficulty = ${difficulty}', {
+                                        songID: songID,
+                                        difficulty: diff.name
+                                    })
+                                    .then(data => {
+
+                                        // If the difficulty exists, just set isOK to false, which will send a 500 at the end. This just notifies the user that one of their difficulties (or more) weren't inserted
+                                            isOK = false
+                                    })
+                                    .catch(() => {
+
+                                        // Set effector to a base "null"
+                                        let effector = null;
+            
+                                        // Check if effector was sent as a parameter. Set effector to that parameter if it was.
+                                        if (diff.effector != null)
+                                            effector = diff.effector
+            
+                                        // Check if level or name isn't null, these are important when uploading a difficulty. Then upload the difficulty
+                                        if (diff.level != null && diff.name != null) {
+                                            dbInfo.db.tx(async t => {
+                                                    await dbInfo.db.none('INSERT INTO charts (difficulty, level, effector, song_fk) VALUES (${difficulty}, ${level}, ${effector}, ${songID})', {
+                                                        difficulty: diff.name,
+                                                        level: diff.level,
+                                                        effector: effector,
+                                                        songID: songID
+                                                    })
+                                            }) 
+                                        }
+                                        else {
+                                            // Set isOK to false if one of the difficulties weren't sent correctly.
+                                            isOK = false
+                                        }
+                                    })
+                                }
+                                
+                            })
+        
+                            // Sends a 200 if everything was okay, or a 500 if things went wrong.
+                            if (isOK) {
+                                res.status(200)
+                                .json({
+                                    message: "Test"
+                                })
+                            } else {
+                                res.status(500) 
+                                .json({
+                                    message: 'One or more of your difficulties were not inserted. They might not have been valid difficulties or they might have been difficulties that already exist.'
+                                })
+                            }
+        
+                            
+                        }
+                        else {
+                            // Sends a 500 if no difficulties were even specified
+                            res.status(500)
+                            .json({
+                                message: "Please specify difficulties to be added"
+                            })
+                        }
+                    } else {
+                        // Forbidden
+                        res.sendStatus(403)
+                    }
+
+                })
+
+
+            }
+        })
+    } else {
+        // Forbidden
+        res.sendStatus(403)
+    }
+}
+
 module.exports = {
     getAllSongs: getAllSongs,
     getBasicSongInformation: getBasicSongInformation,
     addSong: addSong,
-    updateSong: updateSong
+    updateSong: updateSong,
+    addDifficulty: addDifficulty
 }
