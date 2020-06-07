@@ -28,7 +28,7 @@ var db_songs = require('../queries/query_songs.js');
 var db_scores = require('../queries/query_scores.js');
 
 var withOptions = {
-  origin: process.env.ORIGIN,
+  origin: process.env.ORIGIN.split(' '),
   credentials: true,
   allowedHeaders: 'Content-Type,Authorization'
 }
@@ -87,6 +87,8 @@ router.post('/api/delete_score', [cors(withOptions), verifyToken], db_scores.del
 router.post('/api/add_song', [cors(withOptions), verifyToken], db_songs.addSong);
 
 router.post('/api/update_song', [cors(withOptions), verifyToken], db_songs.updateSong);
+
+router.post('/api/add_difficulty', [cors(withOptions), verifyToken], db_songs.addDifficulty);
 
 router.post('/api/profile_picture/:uid', [cors(withOptions), verifyToken, upload.single('profile')], db_users.uploadPictureToDB)
 
