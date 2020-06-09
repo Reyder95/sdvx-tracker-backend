@@ -98,6 +98,7 @@ const addSong = (req, res, next) => {
                 let verified = false;
                 let game = null;
                 let bpm = null;
+                let bpmHigh = null;
                 let custom_link = null;
                 let jacket = null;
                 let userID = req.signedCookies.user_id;
@@ -113,6 +114,9 @@ const addSong = (req, res, next) => {
             
                 if (req.body.postObject.jacket != null)
                     jacket = req.body.postObject.jacket
+
+                if (req.body.postObject.bpmhigh != null)
+                    bpmHigh = req.body.postObject.bpmhigh
             
                 if (req.body.postObject.difficulties.length > 0)
                 {
@@ -124,6 +128,7 @@ const addSong = (req, res, next) => {
                             verified: verified,
                             game: game,
                             bpm: bpm,
+                            bpmHigh: bpmHigh,
                             custom_link: custom_link,
                             jacket: jacket,
                             userID: userID
@@ -300,6 +305,13 @@ const updateSong = (req, res, next) => {
         
                     if (req.body.postObject.custom_link != null)
                         filterObject.custom_link = req.body.postObject.custom_link
+
+                    if (req.body.postObject.bpmhigh != null) {
+                        if (req.body.postObject.bpmhigh != 0)
+                            filterObject.bpmend = req.body.postObject.bpmhigh
+                        else 
+                            filterObject.bpmend = null
+                    }
         
                     if (!isEmpty(filterObject) || req.body.postObject.difficulties.length > 0) {
                         let result = null

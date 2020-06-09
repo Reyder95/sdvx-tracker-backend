@@ -12,8 +12,11 @@ const addScore = (req, res, next) => {
             res.sendStatus(403)
         } else {
 
+            console.log(req.body.score)
+
             if (req.signedCookies.user_id)
             {
+
                 let date = new Date()
         
                 let day = ("0" + date.getDate()).slice(-2)
