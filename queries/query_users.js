@@ -244,6 +244,41 @@ const editProfileInformation = (req, res, next) => {
     }
 }
 
+const changeUsername = (req, res, next) => {
+    if (req.signedCookies.user_id) {
+        jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
+            if (err)
+                res.sendStatus(403)
+            else {
+
+                console.log('hi')
+                console.log(req.body.username)
+                let newUsername = req.body.username
+
+                dbInfo.db.none('UPDATE users SET username = ${username} WHERE id = ${userID}', {
+                    userID: req.signedCookies.user_id,
+                    username: newUsername
+                })
+                .then(() => {
+                    res.status(200)
+                    .json({
+                        message: "Username change successful!"
+                    })
+                })
+                .catch(err => {
+                    res.status(500)
+                    .json({
+                        error: err,
+                        message: "A user with the same username already exists!"
+                    })
+                })
+            }
+        })
+    } else {
+        res.sendStatus(403)
+    }
+}
+
 module.exports = {
     getAllUsers: getAllUsers,
     getUserByEmail: getUserByEmail,
@@ -256,5 +291,6 @@ module.exports = {
     getRecentScoresByUser: getRecentScoresByUser,
     getUserLibrary: getUserLibrary,
     uploadPictureToDB: uploadPictureToDB,
-    editProfileInformation: editProfileInformation
+    editProfileInformation: editProfileInformation,
+    changeUsername: changeUsername
 }
