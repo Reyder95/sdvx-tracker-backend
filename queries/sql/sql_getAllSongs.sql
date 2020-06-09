@@ -6,6 +6,7 @@ SELECT
 	s.verified,
 	s.game,
 	s.bpm,
+	s.bpmEnd,
 	s.custom_link,
 	s.jacket,
 	u.username,
