@@ -98,6 +98,8 @@ router.post('/api/edit_profile', [cors(withOptions), verifyToken], db_users.edit
 
 router.get('/api/user_recent', db_users.getRecentScoresByUser);
 
+router.post('/api/username_change', [cors(withOptions), verifyToken], db_users.changeUsername);
+
 router.get('/api/user_library', db_users.getUserLibrary);
 
 router.get('/api/user', db_users.getUserInfo);
