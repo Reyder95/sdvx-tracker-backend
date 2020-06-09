@@ -1,5 +1,6 @@
-SELECT *
+SELECT s.*, u.username
 FROM
-    songs
+    songs s
+INNER JOIN users u ON u.id = s.user_fk
 WHERE
-    id = ${songID}
+    s.id = ${songID}
