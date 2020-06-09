@@ -106,17 +106,18 @@ const addSong = (req, res, next) => {
                 if (req.body.postObject.game != null)
                     game = req.body.postObject.game
                 
-                if (req.body.postObject.bpm != null)
+                if (req.body.postObject.bpm != null) {
                     bpm = req.body.postObject.bpm
+
+                    if (req.body.postObject.bpmhigh != null)
+                        bpmHigh = req.body.postObject.bpmhigh
+                }
             
                 if (req.body.postObject.custom_link != null && req.body.type == 'custom')
                     custom_link = req.body.postObject.custom_link
             
                 if (req.body.postObject.jacket != null)
                     jacket = req.body.postObject.jacket
-
-                if (req.body.postObject.bpmhigh != null)
-                    bpmHigh = req.body.postObject.bpmhigh
             
                 if (req.body.postObject.difficulties.length > 0)
                 {
