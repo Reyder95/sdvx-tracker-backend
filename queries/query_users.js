@@ -9,6 +9,8 @@ const sql_scoreCount = dbInfo.sql('./sql/sql_scoreCount.sql');
 const sql_getUserGrades = dbInfo.sql('./sql/sql_getUserGrades.sql')
 const sql_getUserRecentScores = dbInfo.sql('./sql/sql_getUserRecentScores.sql')
 const sql_getUserLibrary = dbInfo.sql('/sql/sql_getUserLibrary.sql')
+const sql_getUsernames = dbInfo.sql('/sql/sql_getUsernames.sql')
+const sql_getUserSubmissionCount = dbInfo.sql('/sql/sql_getUserSubmissionCount.sql')
 
 function UpdateFilterSet(filters) {
     if (!filters || typeof filters !== 'object') {
@@ -279,6 +281,40 @@ const changeUsername = (req, res, next) => {
     }
 }
 
+const getListOfUsers = (req, res, next) => {
+    let page = 1
+    let offset = page * 10 - 10
+
+    if (req.query.p != null) {
+        page = req.query.p
+        offset = page * 10 - 10
+    }
+
+    dbInfo.db.task(async t => {
+        return t.map(sql_getUsernames, {offset: offset}, user => {
+
+            const walrus = [
+            ]
+
+            walrus.push(t.one(sql_scoreCount, {userID: user.id}))
+            walrus.push(t.one(sql_libraryCount, {userID: user.id}))
+            walrus.push(t.one(sql_getUserSubmissionCount, {userID: user.id}))
+
+            return t.batch(walrus)
+            .then(data => {
+                user.info = data
+                return user
+            })
+        }).then(t.batch)
+    })
+    .then(data => {
+        res.status(200)
+        .json({
+            data
+        })
+    })
+}
+
 module.exports = {
     getAllUsers: getAllUsers,
     getUserByEmail: getUserByEmail,
@@ -292,5 +328,6 @@ module.exports = {
     getUserLibrary: getUserLibrary,
     uploadPictureToDB: uploadPictureToDB,
     editProfileInformation: editProfileInformation,
-    changeUsername: changeUsername
+    changeUsername: changeUsername,
+    getListOfUsers: getListOfUsers
 }

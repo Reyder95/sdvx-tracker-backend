@@ -73,8 +73,6 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-router.get('/api/users', db_users.getAllUsers);
-
 router.get('/api/songs', db_songs.getAllSongs);
 
 router.get('/api/scores', db_scores.getScoresBySong);
@@ -105,5 +103,7 @@ router.get('/api/user_library', db_users.getUserLibrary);
 router.get('/api/user', db_users.getUserInfo);
 
 router.get('/api/user_grades', db_users.getUserGrades);
+
+router.get('/api/users', db_users.getListOfUsers)
 
 module.exports = router;

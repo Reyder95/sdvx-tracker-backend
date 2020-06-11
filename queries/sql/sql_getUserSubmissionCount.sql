@@ -1,0 +1,1 @@
+SELECT COUNT(*) FROM songs WHERE user_fk = ${userID};
