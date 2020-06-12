@@ -1,0 +1,1 @@
+SELECT COUNT(*) AS submissioncount FROM songs WHERE user_fk = ${userID};

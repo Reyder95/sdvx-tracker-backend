@@ -1,0 +1,1 @@
+SELECT u.id, u.username, u.date_joined, u.pf_picture FROM users u WHERE u.username LIKE ${search} ORDER BY u.username ASC OFFSET ${offset} LIMIT 10;

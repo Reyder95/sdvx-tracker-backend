@@ -1,5 +1,5 @@
 SELECT
-	COUNT(DISTINCT s.id) libraryNumber
+	COUNT(DISTINCT s.id) librarycount
 FROM 
 	songs s 
 INNER JOIN (
