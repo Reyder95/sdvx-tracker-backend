@@ -287,7 +287,7 @@ const changeUsername = (req, res, next) => {
 
 const getListOfUsers = (req, res, next) => {
     let page = 1
-    let offset = page * 10 - 10
+    let offset = page * 20 - 20
     let query = sql_getUsernames;
     let search = '%%'
 
