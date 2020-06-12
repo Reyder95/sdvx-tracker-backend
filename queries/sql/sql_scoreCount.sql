@@ -1,5 +1,5 @@
 SELECT 
-    COUNT(*) scoreNumber 
+    COUNT(*) scorecount 
 FROM 
     scores 
 WHERE 

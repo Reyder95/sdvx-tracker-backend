@@ -1,1 +1,1 @@
-SELECT COUNT(*) FROM songs WHERE user_fk = ${userID};
+SELECT COUNT(*) AS submissioncount FROM songs WHERE user_fk = ${userID};

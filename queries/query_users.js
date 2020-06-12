@@ -12,6 +12,10 @@ const sql_getUserLibrary = dbInfo.sql('/sql/sql_getUserLibrary.sql')
 const sql_getUsernames = dbInfo.sql('/sql/sql_getUsernames.sql')
 const sql_getUserSubmissionCount = dbInfo.sql('/sql/sql_getUserSubmissionCount.sql')
 
+const sql_startingScoreCount = dbInfo.sql('/sql/sql_startingScoreCount.sql')
+const sql_startingLibraryCount = dbInfo.sql('/sql/sql_startingLibraryCount.sql')
+const sql_startingSubmissionCount = dbInfo.sql('/sql/sql_startingSubmissionCount.sql')
+
 function UpdateFilterSet(filters) {
     if (!filters || typeof filters !== 'object') {
         throw new TypeError('Parameter \'filters\' must be an object.')
@@ -284,21 +288,59 @@ const changeUsername = (req, res, next) => {
 const getListOfUsers = (req, res, next) => {
     let page = 1
     let offset = page * 10 - 10
+    let query = sql_getUsernames;
+    let search = '%%'
 
     if (req.query.p != null) {
         page = req.query.p
         offset = page * 10 - 10
     }
 
+    if (req.query.sort == 'score')
+        query = sql_startingScoreCount
+
+    if (req.query.sort == 'library')
+        query = sql_startingLibraryCount
+
+    if (req.query.sort == 'submission')
+        query = sql_startingSubmissionCount
+
+    if (!req.query.sort || req.query.sort == 'alphabet')
+        query = sql_getUsernames
+
+    if (req.query.search)
+        search = `%${req.query.search}%`
+
     dbInfo.db.task(async t => {
-        return t.map(sql_getUsernames, {offset: offset}, user => {
+        return t.map(query, {offset: offset, search: search}, user => {
+
+            
 
             const walrus = [
             ]
 
-            walrus.push(t.one(sql_scoreCount, {userID: user.id}))
-            walrus.push(t.one(sql_libraryCount, {userID: user.id}))
-            walrus.push(t.one(sql_getUserSubmissionCount, {userID: user.id}))
+            if (req.query.sort) {
+                if (req.query.sort == 'score') {
+                    walrus.push(t.one(sql_libraryCount, {userID: user.id}))
+                    walrus.push(t.one(sql_getUserSubmissionCount, {userID: user.id}))
+                }
+
+                if (req.query.sort == 'library') {
+                    walrus.push(t.one(sql_scoreCount, {userID: user.id}))
+                    walrus.push(t.one(sql_getUserSubmissionCount, {userID: user.id}))
+                }
+
+                if (req.query.sort == 'submission') {
+                    walrus.push(t.one(sql_libraryCount, {userID: user.id}))
+                    walrus.push(t.one(sql_scoreCount, {userID: user.id}))
+                }
+            }
+
+            if (!req.query.sort || req.query.sort == 'alphabet') {
+                walrus.push(t.one(sql_scoreCount, {userID: user.id}))
+                walrus.push(t.one(sql_libraryCount, {userID: user.id}))
+                walrus.push(t.one(sql_getUserSubmissionCount, {userID: user.id}))
+            }
 
             return t.batch(walrus)
             .then(data => {
