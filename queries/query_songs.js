@@ -113,7 +113,7 @@ const addSong = (req, res, next) => {
                         bpmHigh = req.body.postObject.bpmhigh
                 }
             
-                if (req.body.postObject.custom_link != null && req.body.type == 'custom')
+                if (req.body.postObject.custom_link != null && req.body.postObject.type == 'custom')
                     custom_link = req.body.postObject.custom_link
             
                 if (req.body.postObject.jacket != null)
