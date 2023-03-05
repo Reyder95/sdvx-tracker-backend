@@ -1,5 +1,8 @@
 # sdvx-tracker-backend
 
+# Archive Note
+Alongside the front end of this project I will be archiving this repository as well. See the front end here and the note that goes along with it: https://github.com/Reyder95/sdvx-tracker-frontend/settings
+
 ### connectionString.json
 This file needs to be in the /queries folder. It contains a few key points to communicate with the database. Keep in mind the database is a PostgreSQL db
 
